@@ -1,0 +1,26 @@
+{
+  "date": "2025-08-13",
+  "indices": {
+    "spx": {"price": 6445.8, "diff": 72.3, "pct": 1.13, "comment": "사상 최고치 경신"},
+    "ndx": {"price": 21681.9, "diff": 296.5, "pct": 1.39, "comment": "대형 성장주 주도"},
+    "djia": {"price": 44458.6, "diff": 483.5, "pct": 1.10, "comment": "금융·산업 우위"},
+    "rty": {"price": 2282.8, "diff": 66.3, "pct": 3.00, "comment": "소형주 급등"}
+  },
+  "macro": {"dxy": 103.2, "ust10y": 3.95, "wti": 78.4},
+  "sectors": {
+    "top": [
+      {"name":"Information Technology","ret1d":1.6,"breadth":0.74},
+      {"name":"Financials","ret1d":1.2,"breadth":0.68},
+      {"name":"Industrials","ret1d":1.1,"breadth":0.66}
+    ],
+    "bottom": [
+      {"name":"Utilities","ret1d":-0.2,"breadth":0.42},
+      {"name":"Real Estate","ret1d":0.1,"breadth":0.48}
+    ]
+  },
+  "movers": [
+    {"symbol":"NVDA","sector":"Information Technology","ret1d":3.2,"mcap":"2.9T","reason":"AI 수요"},
+    {"symbol":"META","sector":"Communication Services","ret1d":2.4,"mcap":"1.3T","reason":"광고 견조"},
+    {"symbol":"DAL","sector":"Industrials","ret1d":2.1,"mcap":"32B","reason":"연료비 둔화"}
+  ]
+}

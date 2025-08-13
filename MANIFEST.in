@@ -1,0 +1,10 @@
+include README.md
+include LICENSE
+include requirements.txt
+include CRON_SETUP.md
+include env.example
+include assets/*.yml
+include samples/*.json
+recursive-include market_automation *.py
+recursive-include market_automation *.yml
+recursive-include market_automation *.json

@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  market-automation:
+    build: .
+    container_name: market-automation
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Seoul
+      - DRY_RUN=1
+    volumes:
+      - ./logs:/var/log
+      - ./assets:/app/assets
+      - ./samples:/app/samples
+    ports:
+      - "8000:8000"
+    networks:
+      - market-network
+
+networks:
+  market-network:
+    driver: bridge

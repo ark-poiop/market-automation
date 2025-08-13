@@ -1,0 +1,29 @@
+display_lang: ko
+rules:
+  top_n: 3
+  bottom_n: 2
+  movers_per_sector: 3
+aliases:
+  "Information Technology": "기술"
+  "Communication Services": "커뮤니케이션"
+  "Consumer Discretionary": "경기소비재"
+  "Industrials": "산업재"
+  "Energy": "에너지"
+  "Financials": "금융"
+  "Health Care": "헬스케어"
+  "Materials": "소재"
+  "Real Estate": "부동산"
+  "Utilities": "유틸리티"
+  "Consumer Staples": "필수소비재"
+emoji:
+  "기술": "💻"
+  "커뮤니케이션": "📡"
+  "경기소비재": "🛍️"
+  "산업재": "🏭"
+  "에너지": "🛢️"
+  "금융": "🏦"
+  "헬스케어": "🧬"
+  "소재": "🧱"
+  "부동산": "🏢"
+  "유틸리티": "⚡"
+  "필수소비재": "🥫"

@@ -1,0 +1,9 @@
+pytz
+python-dateutil
+pandas
+numpy
+requests
+pydantic
+pyyaml
+tenacity
+openai
