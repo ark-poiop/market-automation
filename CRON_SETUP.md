@@ -1,6 +1,6 @@
 # ⏰ 라즈베리파이 크론 설정 가이드
 
-라즈베리파이에서 Market Automation 시스템을 24/7로 실행하기 위한 크론 설정입니다.
+라즈베리파이에서 Market Automation 시스템을 **월요일 장 전(8:30)부터 토요일(07:00)까지만** 실행하기 위한 크론 설정입니다.
 
 ## 🔧 기본 설정
 
@@ -27,7 +27,7 @@ cd /home/pi/market-automation
 ls -la .venv/bin/activate
 ```
 
-## 📅 크론 등록
+## 📅 크론 등록 (주중만 실행)
 
 ### 1. 크론 편집
 
@@ -43,25 +43,26 @@ sudo crontab -e
 
 ```bash
 # Market Automation 크론 설정
-# KST 기준 6개 슬롯 자동 실행
+# 월요일(1) 장 전(8:30)부터 토요일(6) 07:00까지만 실행
+# 토요일 8:30부터 월요일 7:00까지는 실행하지 않음
 
-# 07:00 - 미국 증시 마감 리뷰
-0 7 * * * cd /home/pi/market-automation && . .venv/bin/activate && python -m market_automation.slots.run_0700_us_close >> /var/log/market_0700.log 2>&1
+# 07:00 - 미국 증시 마감 리뷰 (월~토)
+0 7 * * 1-6 cd /home/pi/market-automation && . .venv/bin/activate && python -m market_automation.slots.run_0700_us_close >> /var/log/market_0700.log 2>&1
 
-# 08:30 - 한국 개장 전 전망
-30 8 * * * cd /home/pi/market-automation && . .venv/bin/activate && python -m market_automation.slots.run_0830_kr_preopen >> /var/log/market_0830.log 2>&1
+# 08:30 - 한국 개장 전 전망 (월~금)
+30 8 * * 1-5 cd /home/pi/market-automation && . .venv/bin/activate && python -m market_automation.slots.run_0830_kr_preopen >> /var/log/market_0830.log 2>&1
 
-# 12:00 - 한국 장중 현황
-0 12 * * * cd /home/pi/market-automation && . .venv/bin/activate && python -m market_automation.slots.run_1200_kr_midday >> /var/log/market_1200.log 2>&1
+# 12:00 - 한국 장중 현황 (월~금)
+0 12 * * 1-5 cd /home/pi/market-automation && . .venv/bin/activate && python -m market_automation.slots.run_1200_kr_midday >> /var/log/market_1200.log 2>&1
 
-# 16:00 - 한국 장 마감 요약
-0 16 * * * cd /home/pi/market-automation && . .venv/bin/activate && python -m market_automation.slots.run_1600_kr_close >> /var/log/market_1600.log 2>&1
+# 16:00 - 한국 장 마감 요약 (월~금)
+0 16 * * 1-5 cd /home/pi/market-automation && . .venv/bin/activate && python -m market_automation.slots.run_1600_kr_close >> /var/log/market_1600.log 2>&1
 
-# 20:00 - 미국 증시 개장 전
-0 20 * * * cd /home/pi/market-automation && . .venv/bin/activate && python -m market_automation.slots.run_2000_us_preview >> /var/log/market_2000.log 2>&1
+# 20:00 - 미국 증시 개장 전 (월~금)
+0 20 * * 1-5 cd /home/pi/market-automation && . .venv/bin/activate && python -m market_automation.slots.run_2000_us_preview >> /var/log/market_2000.log 2>&1
 
-# 23:00 - 미국 증시 장전
-0 23 * * * cd /home/pi/market-automation && . .venv/bin/activate && python -m market_automation.slots.run_2300_us_premkt >> /var/log/market_2300.log 2>&1
+# 23:00 - 미국 증시 장전 (월~금)
+0 23 * * 1-5 cd /home/pi/market-automation && . .venv/bin/activate && python -m market_automation.slots.run_2300_us_premkt >> /var/log/market_2300.log 2>&1
 ```
 
 ### 3. 크론 저장 및 확인
@@ -73,6 +74,25 @@ crontab -l
 # 크론 서비스 상태 확인
 sudo systemctl status cron
 ```
+
+## 📊 실행 스케줄 요약
+
+### 🟢 **활성화 기간: 월요일 8:30 ~ 토요일 07:00**
+
+| 요일 | 07:00 | 08:30 | 12:00 | 16:00 | 20:00 | 23:00 |
+|------|-------|-------|-------|-------|-------|-------|
+| **월요일** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **화요일** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **수요일** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **목요일** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **금요일** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **토요일** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **일요일** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+### 🔴 **비활성화 기간: 토요일 8:30 ~ 월요일 7:00**
+
+- **토요일 8:30 ~ 일요일 23:59**: 모든 슬롯 비활성화
+- **월요일 00:00 ~ 7:00**: 모든 슬롯 비활성화
 
 ## 📝 로그 설정
 
@@ -220,3 +240,11 @@ sudo systemctl restart cron
 3. **권한**: 가상환경과 프로젝트 디렉토리 접근 권한 확인
 4. **로그**: 각 슬롯별 로그 파일 생성 확인
 5. **테스트**: 실제 크론 등록 전 수동 실행 테스트 필수
+6. **주말 비활성화**: 토요일 8:30부터 월요일 7:00까지는 모든 슬롯이 실행되지 않음
+
+## 🎯 스케줄 변경 이유
+
+- **주말 휴식**: 토요일 오후부터 일요일까지는 시장이 닫혀있어 불필요한 실행 방지
+- **리소스 절약**: 주말 동안 불필요한 시스템 리소스 사용 방지
+- **유지보수 시간**: 주말 동안 시스템 점검 및 업데이트 가능
+- **실용성**: 실제 거래 시간과 일치하는 스케줄링

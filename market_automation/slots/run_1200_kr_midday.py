@@ -15,39 +15,60 @@ sys.path.insert(0, str(project_root))
 
 from market_automation.posting.poster import MarketPoster
 from market_automation.config import config
+from market_automation.datasource.naver_adapter import NaverDataAdapter
 
 def main():
     """메인 실행 함수"""
     print(f"🕐 {__file__} 실행 시작")
+    print(f"🔧 DRY_RUN 모드: {config.is_dry_run()}")
     
     try:
         # 포스터 초기화
         poster = MarketPoster()
         
-        # TODO: 실제 API에서 한국 장중 데이터 수집
-        # 현재는 샘플 데이터로 대체
-        sample_data = {
-            "date": "2025-08-13",
-            "kospi": {"price": 2650.5, "diff": 15.3, "pct": 0.58},
-            "kosdaq": {"price": 890.2, "diff": 8.7, "pct": 0.99},
-            "usdkrs": 1362.5,
-            "volume_ratio": 1.2,
-            "top_sectors": ["반도체", "은행", "항공"],
-            "bottom_sectors": ["건설", "화학"],
-            "movers": "삼성전자 +2.1%, SK하이닉스 +1.8%"
-        }
+        # 네이버 데이터 어댑터 초기화
+        naver_adapter = NaverDataAdapter()
         
-        print("📊 장중 데이터 준비 완료")
+        # 네이버 데이터 로드 및 변환
+        naver_data = naver_adapter.load_naver_data()
         
-        # TODO: 실제 포스팅 로직 구현
-        print("⚠️ 장중 포스팅 로직 구현 필요")
-        print("🔒 DRY RUN 모드로 실행됨")
+        if naver_data:
+            print("📊 네이버 데이터 로드 완료")
+            
+            # 한국 장중 형식으로 변환
+            sample_data = naver_adapter.convert_to_kr_midday_format(naver_data)
+            print("🔄 데이터 형식 변환 완료")
+            
+            print("📊 한국 장중 데이터 준비 완료")
+            print(f"📅 날짜: {sample_data['date']}")
+            print(f"📈 KOSPI: {sample_data['kospi']['price']} ({sample_data['kospi']['diff']:+}, {sample_data['kospi']['pct']:+.2f}%)")
+            print(f"📈 KOSDAQ: {sample_data['kosdaq']['price']} ({sample_data['kosdaq']['diff']:+}, {sample_data['kosdaq']['pct']:+.2f}%)")
+            print(f"🟢 상승 업종: {', '.join(sample_data['top_sectors'])}")
+            print(f"🔴 하락 업종: {', '.join(sample_data['bottom_sectors'])}")
+            
+            # 포스팅 실행
+            print("\n🔄 한국 장중 포스팅 실행 중...")
+            result = poster.post_kr_midday(sample_data)
         
+        if result["success"]:
+            print("✅ 한국 장중 포스팅 성공")
+            if result.get("dry_run"):
+                print("🔒 DRY RUN 모드로 실행됨")
+                print("\n" + "="*60)
+                print("📝 생성된 포스트 내용:")
+                print("="*60)
+                print(result.get("content", "콘텐츠 없음"))
+                print("="*60)
+        else:
+            print(f"❌ 한국 장중 포스팅 실패: {result.get('error', 'Unknown error')}")
+            
     except Exception as e:
         print(f"💥 예상치 못한 오류: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
     
-    print(f"🏁 {__file__} 실행 완료")
+    print(f"\n🏁 {__file__} 실행 완료")
 
 if __name__ == "__main__":
     main()

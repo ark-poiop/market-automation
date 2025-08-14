@@ -21,7 +21,6 @@ Russell 2000 — {rty} ({rty_diff}, {rty_pct}%) 📈 {rty_comment}
 KR_PREOPEN = """🇰🇷 개장 전 전망 ({date})
 🌏 전일 미증시 — S&P500 {spx_pct}%, Nasdaq {ndx_pct}%, Dow {djia_pct}%
 📉 선물 — K200F {k200f}, S&P500F {es}, NasdaqF {nq}
-💱 환율·원자재 — USDKRW {usdkrs}, WTI ${wti}, 10Y {ust10y}bp
 
 🗓️ 일정 — {today_events}
 📈 업종 포커스 — {focus_sectors}
@@ -31,8 +30,6 @@ KR_PREOPEN = """🇰🇷 개장 전 전망 ({date})
 KR_MIDDAY = """🇰🇷 장중 현황 ({date})
 📊 KOSPI {kospi} ({kospi_diff}, {kospi_pct}%)
 📈 KOSDAQ {kosdaq} ({kosdaq_diff}, {kosdaq_pct}%)
-💱 환율 — USDKRW {usdkrs}
-🔄 거래량 — {volume_ratio}배
 
 🟢 상승 업종 — {top_sectors}
 🔴 하락 업종 — {bottom_sectors}
@@ -42,8 +39,6 @@ KR_MIDDAY = """🇰🇷 장중 현황 ({date})
 KR_CLOSE = """🇰🇷 장 마감 요약 ({date})
 📊 KOSPI {kospi} ({kospi_diff}, {kospi_pct}%)
 📈 KOSDAQ {kosdaq} ({kosdaq_diff}, {kosdaq_pct}%)
-💱 환율 — USDKRW {usdkrs}
-🔄 거래량 — {volume_ratio}배
 
 🟢 섹터 요약
 {sector_line}

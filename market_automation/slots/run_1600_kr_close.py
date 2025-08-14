@@ -15,49 +15,60 @@ sys.path.insert(0, str(project_root))
 
 from market_automation.posting.poster import MarketPoster
 from market_automation.config import config
+from market_automation.datasource.naver_adapter import NaverDataAdapter
 
 def main():
     """메인 실행 함수"""
     print(f"🕐 {__file__} 실행 시작")
+    print(f"🔧 DRY_RUN 모드: {config.is_dry_run()}")
     
     try:
         # 포스터 초기화
         poster = MarketPoster()
         
-        # TODO: 실제 API에서 한국 장 마감 데이터 수집
-        # 현재는 샘플 데이터로 대체
-        sample_data = {
-            "date": "2025-08-13",
-            "kospi": {"price": 2665.8, "diff": 30.6, "pct": 1.16},
-            "kosdaq": {"price": 895.5, "diff": 14.0, "pct": 1.59},
-            "usdkrs": 1361.8,
-            "volume_ratio": 1.5,
-            "sectors": {
-                "top": [
-                    {"name": "Information Technology", "ret1d": 2.1, "breadth": 0.75},
-                    {"name": "Financials", "ret1d": 1.8, "breadth": 0.68}
-                ],
-                "bottom": [
-                    {"name": "Materials", "ret1d": -0.5, "breadth": 0.45}
-                ]
-            },
-            "movers": [
-                {"symbol": "005930", "sector": "Information Technology", "ret1d": 2.1, "reason": "AI 수요 증가"},
-                {"symbol": "000660", "sector": "Information Technology", "ret1d": 1.8, "reason": "메모리 가격 상승"}
-            ]
-        }
+        # 네이버 데이터 어댑터 초기화
+        naver_adapter = NaverDataAdapter()
         
-        print("📊 장 마감 데이터 준비 완료")
+        # 네이버 데이터 로드 및 변환
+        naver_data = naver_adapter.load_naver_data()
         
-        # TODO: 실제 포스팅 로직 구현
-        print("⚠️ 장 마감 포스팅 로직 구현 필요")
-        print("🔒 DRY RUN 모드로 실행됨")
+        if naver_data:
+            print("📊 네이버 데이터 로드 완료")
+            
+            # 한국 장 마감 형식으로 변환
+            sample_data = naver_adapter.convert_to_kr_close_format(naver_data)
+            print("🔄 데이터 형식 변환 완료")
+            
+            print("📊 한국 장 마감 데이터 준비 완료")
+            print(f"📅 날짜: {sample_data['date']}")
+            print(f"📈 KOSPI: {sample_data['kospi']['price']} ({sample_data['kospi']['diff']:+}, {sample_data['kospi']['pct']:+.2f}%)")
+            print(f"📈 KOSDAQ: {sample_data['kosdaq']['price']} ({sample_data['kosdaq']['diff']:+}, {sample_data['kosdaq']['pct']:+.2f}%)")
+            print(f"🏭 섹터 개수: 상위 {len(sample_data['sectors']['top'])}, 하위 {len(sample_data['sectors']['bottom'])}")
+            print(f"🚀 특징주 개수: {len(sample_data['movers'])}")
+            
+            # 포스팅 실행
+            print("\n🔄 한국 장 마감 포스팅 실행 중...")
+            result = poster.post_kr_close(sample_data)
         
+        if result["success"]:
+            print("✅ 한국 장 마감 포스팅 성공")
+            if result.get("dry_run"):
+                print("🔒 DRY RUN 모드로 실행됨")
+                print("\n" + "="*60)
+                print("📝 생성된 포스트 내용:")
+                print("="*60)
+                print(result.get("content", "콘텐츠 없음"))
+                print("="*60)
+        else:
+            print(f"❌ 한국 장 마감 포스팅 실패: {result.get('error', 'Unknown error')}")
+            
     except Exception as e:
         print(f"💥 예상치 못한 오류: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
     
-    print(f"🏁 {__file__} 실행 완료")
+    print(f"\n🏁 {__file__} 실행 완료")
 
 if __name__ == "__main__":
     main()

@@ -15,6 +15,7 @@ sys.path.insert(0, str(project_root))
 
 from market_automation.posting.poster import MarketPoster
 from market_automation.config import config
+from market_automation.datasource.naver_adapter import NaverDataAdapter
 
 def main():
     """메인 실행 함수"""
@@ -24,14 +25,18 @@ def main():
         # 포스터 초기화
         poster = MarketPoster()
         
-        # 샘플 데이터 로드 (실제 운영 시에는 API에서 데이터 수집)
-        sample_file = project_root / "samples" / "sample_kr_preopen.json"
+        # 네이버 데이터 어댑터 초기화
+        naver_adapter = NaverDataAdapter()
         
-        if sample_file.exists():
-            with open(sample_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
+        # 네이버 데이터 로드 및 변환
+        naver_data = naver_adapter.load_naver_data()
+        
+        if naver_data:
+            print("📊 네이버 데이터 로드 완료")
             
-            print("📊 샘플 데이터 로드 완료")
+            # 한국 개장 전 형식으로 변환
+            data = naver_adapter.convert_to_kr_preopen_format(naver_data)
+            print("🔄 데이터 형식 변환 완료")
             
             # 포스팅 실행
             result = poster.post_kr_preopen(data)
@@ -44,8 +49,12 @@ def main():
                 print(f"❌ 포스팅 실패: {result.get('error', 'Unknown error')}")
                 
         else:
-            print("❌ 샘플 데이터 파일을 찾을 수 없음")
-            print(f"경로: {sample_file}")
+            print("❌ 네이버 데이터를 로드할 수 없음")
+            print("기본 데이터로 포스팅을 시도합니다.")
+            
+            # 기본 데이터로 포스팅 시도
+            data = naver_adapter.convert_to_kr_preopen_format({})
+            result = poster.post_kr_preopen(data)
             
     except Exception as e:
         print(f"💥 예상치 못한 오류: {e}")

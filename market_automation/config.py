@@ -19,17 +19,22 @@ class Config:
         env_vars = {}
         
         if env_file.exists():
+            print(f"🔧 .env 파일 로드: {env_file}")
             with open(env_file, "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if line and not line.startswith("#") and "=" in line:
                         key, value = line.split("=", 1)
                         env_vars[key] = value
+                        print(f"  {key}={value}")
+        else:
+            print(f"⚠️ .env 파일을 찾을 수 없음: {env_file}")
         
         # 환경 변수로 오버라이드
         for key in env_vars:
             if os.getenv(key):
                 env_vars[key] = os.getenv(key)
+                print(f"  {key} (환경변수로 오버라이드): {os.getenv(key)}")
         
         return env_vars
     
