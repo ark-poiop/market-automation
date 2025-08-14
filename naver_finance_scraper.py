@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 네이버 금융 지수 데이터 수집기
-KOSPI, KOSDAQ 실시간 지수 정보를 웹 스크래핑으로 수집
+KOSPI, KOSDAQ, 미국 주요 지수 실시간 정보를 웹 스크래핑으로 수집
 """
 
 import requests
@@ -14,6 +14,7 @@ import json
 class NaverFinanceScraper:
     def __init__(self):
         self.base_url = "https://finance.naver.com/sise/"
+        self.world_url = "https://finance.naver.com/world/"
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
@@ -36,6 +37,15 @@ class NaverFinanceScraper:
             
             # 지수 정보 추출
             market_data = self._extract_market_data(soup)
+            
+            # 세계지수 데이터 수집
+            print("\n🌍 세계지수 데이터 수집 중...")
+            world_data = self.get_world_market_data()
+            if world_data and 'error' not in world_data:
+                market_data['world'] = world_data
+                print("✅ 세계지수 데이터 수집 완료")
+            else:
+                print("⚠️ 세계지수 데이터 수집 실패")
             
             return market_data
             
@@ -70,6 +80,102 @@ class NaverFinanceScraper:
             
         except Exception as e:
             print(f"❌ 데이터 추출 실패: {e}")
+            return {"error": str(e)}
+    
+    def get_world_market_data(self):
+        """네이버 금융 세계지수 페이지에서 미국 주요 지수 데이터 수집"""
+        try:
+            # 세계지수 페이지 요청
+            response = requests.get(self.world_url, headers=self.headers)
+            response.raise_for_status()
+            
+            # 한글 인코딩 처리
+            response.encoding = 'euc-kr'
+            
+            # BeautifulSoup으로 파싱
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # 미국 주요 지수 데이터 추출
+            world_data = self._extract_world_market_data(soup)
+            
+            return world_data
+            
+        except Exception as e:
+            print(f"❌ 세계지수 데이터 수집 실패: {e}")
+            return {"error": str(e)}
+    
+    def _extract_world_market_data(self, soup):
+        """HTML에서 세계지수 데이터 추출"""
+        try:
+            world_data = {}
+            
+            # JavaScript 변수에서 데이터 파싱
+            script_tags = soup.find_all('script')
+            
+            for script in script_tags:
+                script_text = script.get_text()
+                
+                # americaData 변수 찾기
+                if 'americaData' in script_text:
+                    print("🔍 americaData 변수 발견, 데이터 파싱 중...")
+                    
+                    # S&P 500 데이터 파싱
+                    sp500_match = re.search(r'"SPI@SPX":\{"diff":([+-]?[\d.]+)[^}]*"last":([\d.]+)[^}]*"rate":([+-]?[\d.]+)', script_text)
+                    if sp500_match:
+                        change = float(sp500_match.group(1))
+                        price = float(sp500_match.group(2))
+                        change_rate = float(sp500_match.group(3))
+                        
+                        world_data['sp500'] = {
+                            'price': price,
+                            'change': change,
+                            'change_rate': change_rate,
+                            'timestamp': datetime.now().isoformat()
+                        }
+                        print(f"📊 S&P 500: {price:,.2f} ({change:+,.2f}, {change_rate:+.2f}%)")
+                    else:
+                        print("⚠️ S&P 500 데이터 파싱 실패")
+                    
+                    # 나스닥 종합 데이터 파싱
+                    nasdaq_match = re.search(r'"NAS@IXIC":\{"diff":([+-]?[\d.]+)[^}]*"last":([\d.]+)[^}]*"rate":([+-]?[\d.]+)', script_text)
+                    if nasdaq_match:
+                        change = float(nasdaq_match.group(1))
+                        price = float(nasdaq_match.group(2))
+                        change_rate = float(nasdaq_match.group(3))
+                        
+                        world_data['nasdaq'] = {
+                            'price': price,
+                            'change': change,
+                            'change_rate': change_rate,
+                            'timestamp': datetime.now().isoformat()
+                        }
+                        print(f"📈 나스닥: {price:,.2f} ({change:+,.2f}, {change_rate:+.2f}%)")
+                    else:
+                        print("⚠️ 나스닥 데이터 파싱 실패")
+                    
+                    # 다우 산업 데이터 파싱
+                    dow_match = re.search(r'"DJI@DJI":\{"diff":([+-]?[\d.]+)[^}]*"last":([\d.]+)[^}]*"rate":([+-]?[\d.]+)', script_text)
+                    if dow_match:
+                        change = float(dow_match.group(1))
+                        price = float(dow_match.group(2))
+                        change_rate = float(dow_match.group(3))
+                        
+                        world_data['dow'] = {
+                            'price': price,
+                            'change': change,
+                            'change_rate': change_rate,
+                            'timestamp': datetime.now().isoformat()
+                        }
+                        print(f"🏭 다우: {price:,.2f} ({change:+,.2f}, {change_rate:+.2f}%)")
+                    else:
+                        print("⚠️ 다우 데이터 파싱 실패")
+                    
+                    break  # americaData를 찾았으면 중단
+            
+            return world_data
+            
+        except Exception as e:
+            print(f"❌ 세계지수 데이터 추출 실패: {e}")
             return {"error": str(e)}
     
     def _extract_kospi_data(self, soup):
@@ -421,10 +527,6 @@ class NaverFinanceScraper:
             print(f"❌ KOSDAQ 폴백 추출 실패: {e}")
             return None
     
-
-    
-
-    
     def save_to_json(self, data, filename="naver_market_data.json"):
         """데이터를 JSON 파일로 저장"""
         try:
@@ -452,7 +554,22 @@ class NaverFinanceScraper:
             kosdaq = data['kosdaq']
             print(f"📈 KOSDAQ: {kosdaq['price']:,.2f} ({kosdaq['change']:+,.2f}, {kosdaq['change_rate']:+.2f}%)")
         
-
+        # 세계지수 정보 출력
+        if 'world' in data:
+            world = data['world']
+            print("\n🌍 세계지수 현황:")
+            
+            if 'sp500' in world:
+                sp500 = world['sp500']
+                print(f"📊 S&P 500: {sp500['price']:,.2f} ({sp500['change']:+,.2f}, {sp500['change_rate']:+.2f}%)")
+            
+            if 'nasdaq' in world:
+                nasdaq = world['nasdaq']
+                print(f"📈 나스닥: {nasdaq['price']:,.2f} ({nasdaq['change']:+,.2f}, {nasdaq['change_rate']:+.2f}%)")
+            
+            if 'dow' in world:
+                dow = world['dow']
+                print(f"🏭 다우: {dow['price']:,.2f} ({dow['change']:+,.2f}, {dow['change_rate']:+.2f}%)")
         
         print(f"⏰ 수집 시간: {data.get('timestamp', 'N/A')}")
         print(f"🔗 데이터 소스: {data.get('source', 'N/A')}")
