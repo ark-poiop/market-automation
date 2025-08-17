@@ -212,6 +212,18 @@ class NaverDataAdapter:
                 }
                 print(f"🏭 다우 변환: {dow['price']:,.2f} ({dow['change']:+,.2f}, {dow['change_rate']:+.2f}%)")
             
+            # 섹터 데이터 변환
+            if "sectors" in naver_data:
+                sectors = naver_data["sectors"]
+                converted_data["sectors"] = sectors
+                print(f"🏭 섹터 데이터 변환: 상위 {len(sectors.get('top', []))}개, 하위 {len(sectors.get('bottom', []))}개")
+            
+            # 특징주 데이터 변환
+            if "movers" in naver_data:
+                movers = naver_data["movers"]
+                converted_data["movers"] = movers
+                print(f"🚀 특징주 데이터 변환: {len(movers)}개")
+            
             # Russell 2000은 기본값 사용 (네이버에서 제공하지 않음)
             print(f"✅ 미국 장 마감 형식으로 변환 완료")
             return converted_data

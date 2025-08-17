@@ -47,11 +47,109 @@ class NaverFinanceScraper:
             else:
                 print("⚠️ 세계지수 데이터 수집 실패")
             
+            # 섹터 데이터 수집
+            print("\n🏭 섹터 데이터 수집 중...")
+            sector_data = self.get_sector_data()
+            if sector_data:
+                market_data['sectors'] = sector_data
+                print("✅ 섹터 데이터 수집 완료")
+            else:
+                print("⚠️ 섹터 데이터 수집 실패")
+            
+            # 특징주 데이터 수집
+            print("\n🚀 특징주 데이터 수집 중...")
+            movers_data = self.get_movers_data()
+            if movers_data:
+                market_data['movers'] = movers_data
+                print("✅ 특징주 데이터 수집 완료")
+            else:
+                print("⚠️ 특징주 데이터 수집 실패")
+            
             return market_data
             
         except Exception as e:
             print(f"❌ 데이터 수집 실패: {e}")
             return {"error": str(e)}
+    
+    def get_sector_data(self):
+        """업종별 시세 데이터 수집"""
+        try:
+            print("🏭 업종별 시세 데이터 수집 중...")
+            
+            # 업종별 시세 페이지
+            sector_url = "https://finance.naver.com/sise/sise_group.naver"
+            response = requests.get(sector_url, headers=self.headers)
+            response.raise_for_status()
+            response.encoding = 'euc-kr'
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            sector_data = self._extract_sector_data(soup)
+            
+            if sector_data:
+                print("✅ 업종별 시세 데이터 수집 완료")
+                return sector_data
+            else:
+                print("⚠️ 업종별 시세 데이터 수집 실패")
+                return None
+                
+        except Exception as e:
+            print(f"❌ 업종별 시세 데이터 수집 실패: {e}")
+            return None
+    
+    def get_movers_data(self):
+        """특징주 데이터 수집"""
+        try:
+            print("🚀 특징주 데이터 수집 중...")
+            
+            # 여러 특징주 페이지에서 시도
+            movers_data = None
+            
+            # 1. 거래량 급증 페이지 시도
+            volume_url = "https://finance.naver.com/sise/sise_quant.naver"
+            movers_data = self._try_get_movers_from_url(volume_url, "거래량 급증")
+            
+            # 2. 급등주 페이지 시도
+            if not movers_data:
+                rise_url = "https://finance.naver.com/sise/sise_rise.naver"
+                movers_data = self._try_get_movers_from_url(rise_url, "급등주")
+            
+            # 3. 시가총액 상위 페이지 시도
+            if not movers_data:
+                market_url = "https://finance.naver.com/sise/sise_market_sum.naver"
+                movers_data = self._try_get_movers_from_url(market_url, "시가총액 상위")
+            
+            if movers_data:
+                print("✅ 특징주 데이터 수집 완료")
+                return movers_data
+            else:
+                print("⚠️ 모든 특징주 페이지에서 데이터 수집 실패")
+                return None
+                
+        except Exception as e:
+            print(f"❌ 특징주 데이터 수집 실패: {e}")
+            return None
+    
+    def _try_get_movers_from_url(self, url, page_name):
+        """특정 URL에서 특징주 데이터 수집 시도"""
+        try:
+            print(f"   🔍 {page_name} 페이지 시도 중...")
+            response = requests.get(url, headers=self.headers)
+            response.raise_for_status()
+            response.encoding = 'euc-kr'
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            movers_data = self._extract_movers_data(soup)
+            
+            if movers_data:
+                print(f"   ✅ {page_name} 페이지에서 데이터 수집 성공")
+                return movers_data
+            else:
+                print(f"   ⚠️ {page_name} 페이지에서 데이터 수집 실패")
+                return None
+                
+        except Exception as e:
+            print(f"   ❌ {page_name} 페이지 접근 실패: {e}")
+            return None
     
     def _extract_market_data(self, soup):
         """HTML에서 시장 데이터 추출"""
@@ -527,6 +625,93 @@ class NaverFinanceScraper:
             print(f"❌ KOSDAQ 폴백 추출 실패: {e}")
             return None
     
+    def _extract_sector_data(self, soup):
+        """HTML에서 업종별 시세 데이터 추출"""
+        try:
+            sectors = {"top": [], "bottom": []}
+            
+            # 업종별 시세 테이블 찾기
+            sector_table = soup.find('table', class_='type_1')
+            if not sector_table:
+                print("⚠️ 업종별 시세 테이블을 찾을 수 없음")
+                return None
+            
+            # 업종 행들 찾기
+            sector_rows = sector_table.find_all('tr')[1:]  # 헤더 제외
+            
+            sector_list = []
+            for row in sector_rows[:10]:  # 상위 10개 업종
+                cells = row.find_all('td')
+                if len(cells) >= 4:
+                    sector_name = cells[0].get_text(strip=True)
+                    change_rate = cells[3].get_text(strip=True)
+                    
+                    # 등락률 파싱
+                    try:
+                        rate = float(change_rate.replace('%', ''))
+                        sector_list.append({
+                            "name": sector_name,
+                            "change_rate": rate
+                        })
+                    except:
+                        continue
+            
+            # 등락률 기준으로 정렬
+            sector_list.sort(key=lambda x: x["change_rate"], reverse=True)
+            
+            # 상위/하위 업종 분류
+            sectors["top"] = sector_list[:3]  # 상위 3개
+            sectors["bottom"] = sector_list[-3:]  # 하위 3개
+            
+            print(f"📊 상위 업종: {[s['name'] for s in sectors['top']]}")
+            print(f"📉 하위 업종: {[s['name'] for s in sectors['bottom']]}")
+            
+            return sectors
+            
+        except Exception as e:
+            print(f"❌ 업종별 시세 데이터 추출 실패: {e}")
+            return None
+    
+    def _extract_movers_data(self, soup):
+        """HTML에서 특징주 데이터 추출"""
+        try:
+            movers = []
+            
+            # 거래량 급증 테이블 찾기
+            movers_table = soup.find('table', class_='type_1')
+            if not movers_table:
+                print("⚠️ 거래량 급증 테이블을 찾을 수 없음")
+                return None
+            
+            # 특징주 행들 찾기
+            mover_rows = movers_table.find_all('tr')[1:]  # 헤더 제외
+            
+            for row in mover_rows[:5]:  # 상위 5개 종목
+                cells = row.find_all('td')
+                if len(cells) >= 4:
+                    stock_name = cells[0].get_text(strip=True)
+                    stock_code = cells[1].get_text(strip=True)
+                    change_rate = cells[3].get_text(strip=True)
+                    
+                    # 등락률 파싱
+                    try:
+                        rate = float(change_rate.replace('%', ''))
+                        movers.append({
+                            "name": stock_name,
+                            "code": stock_code,
+                            "change_rate": rate
+                        })
+                    except:
+                        continue
+            
+            print(f"🚀 특징주 {len(movers)}개 수집: {[f'{m['name']}({m['change_rate']:+.1f}%)' for m in movers]}")
+            
+            return movers
+            
+        except Exception as e:
+            print(f"❌ 특징주 데이터 추출 실패: {e}")
+            return None
+    
     def save_to_json(self, data, filename="naver_market_data.json"):
         """데이터를 JSON 파일로 저장"""
         try:
@@ -570,6 +755,26 @@ class NaverFinanceScraper:
             if 'dow' in world:
                 dow = world['dow']
                 print(f"🏭 다우: {dow['price']:,.2f} ({dow['change']:+,.2f}, {dow['change_rate']:+.2f}%)")
+        
+        # 섹터 정보 출력
+        if 'sectors' in data:
+            sectors = data['sectors']
+            print("\n🏭 업종별 현황:")
+            if sectors["top"]:
+                print("📈 상위 업종:")
+                for s in sectors["top"]:
+                    print(f"   - {s['name']} ({s['change_rate']:+.1f}%)")
+            if sectors["bottom"]:
+                print("📉 하위 업종:")
+                for s in sectors["bottom"]:
+                    print(f"   - {s['name']} ({s['change_rate']:+.1f}%)")
+
+        # 특징주 정보 출력
+        if 'movers' in data:
+            movers = data['movers']
+            print("\n🚀 특징주 현황:")
+            for m in movers:
+                print(f"   - {m['name']} ({m['change_rate']:+.1f}%)")
         
         print(f"⏰ 수집 시간: {data.get('timestamp', 'N/A')}")
         print(f"🔗 데이터 소스: {data.get('source', 'N/A')}")

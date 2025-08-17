@@ -79,16 +79,38 @@ class ThreadsClient:
             if reply_to:
                 data["reply_to"] = reply_to
             
-            response = requests.post(f"{self.base_url}/me/feed", headers=headers, json=data)
+            # Threads API는 2단계 프로세스를 사용합니다
+            # 1단계: 미디어 컨테이너 생성
+            data["media_type"] = "TEXT"  # 대문자로 변경
+            response = requests.post(f"{self.base_url}/{self.user_id}/threads", headers=headers, json=data)
             
             if response.status_code == 200:
                 result = response.json()
-                return {
-                    "success": True,
-                    "post_id": result.get("id"),
-                    "content": content,
-                    "response": result
-                }
+                container_id = result.get("id")
+                
+                # 2단계: 컨테이너 게시
+                import time
+                time.sleep(2)  # Facebook 권장사항: 30초, 테스트용으로 2초
+                
+                publish_data = {"creation_id": container_id}
+                publish_response = requests.post(f"{self.base_url}/{self.user_id}/threads_publish", headers=headers, json=publish_data)
+                
+                if publish_response.status_code == 200:
+                    publish_result = publish_response.json()
+                    return {
+                        "success": True,
+                        "post_id": publish_result.get("id"),
+                        "container_id": container_id,
+                        "content": content,
+                        "response": publish_result
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "error": f"Publish API Error: {publish_response.status_code}",
+                        "container_id": container_id,
+                        "response": publish_response.text
+                    }
             else:
                 return {
                     "success": False,
