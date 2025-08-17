@@ -333,101 +333,102 @@ class NaverFinanceScraper:
                         'timestamp': datetime.now().isoformat()
                     }
                 
-                # 방법 3: 특정 클래스나 ID로 등락 정보 찾기
-                change_elem = soup.find('span', class_='num2')
-                if change_elem:
-                    change_text = change_elem.get_text()
-                    print(f"🔍 KOSPI 등락 요소 발견: {change_text}")
-                    
-                    # 등락 요소의 부모와 형제 요소들도 확인
-                    parent = change_elem.parent
-                    if parent:
-                        parent_text = parent.get_text()
-                        print(f"🔍 KOSPI 등락 요소 부모: {parent_text}")
-                        
-                        # 형제 요소들 확인
-                        siblings = parent.find_all('span')
-                        for i, sibling in enumerate(siblings):
-                            sibling_text = sibling.get_text()
-                            sibling_class = sibling.get('class', [])
-                            print(f"🔍 KOSPI 형제 요소 {i+1}: {sibling_text} (클래스: {sibling_class})")
-                        
-                        # 형제 요소 3번에서 등락 정보 추출 (실제로 발견된 위치)
-                        if len(siblings) >= 3:
-                            change_sibling = siblings[2]  # 3번째 형제 요소
-                            change_sibling_text = change_sibling.get_text().strip()
-                            print(f"🎯 KOSPI 등락 형제 요소: {change_sibling_text}")
-                            
-                            # 등락 정보 파싱: "5.18 -0.16%상승" 형식
-                            change_pattern = r'([+-]?\d+\.\d+)\s+([+-]\d+\.\d+)%'
-                            change_match = re.search(change_pattern, change_sibling_text)
-                            
-                            if change_match:
-                                change_str = change_match.group(1)
-                                change_rate = float(change_match.group(2))
-                                
-                                # 등락 값의 부호를 등락률과 일치시키기
-                                # 등락률이 음수면 등락도 음수로, 양수면 등락도 양수로
-                                if change_rate < 0:
-                                    # 등락률이 음수면 등락도 음수로 처리
-                                    if not change_str.startswith('-'):
-                                        change_str = '-' + change_str
-                                else:
-                                    # 등락률이 양수면 등락도 양수로 처리
-                                    if not change_str.startswith('+'):
-                                        change_str = '+' + change_str
-                                
-                                change = float(change_str)
-                                
-                                print(f"🎯 KOSPI 등락 정보 파싱 성공: {change:+,.2f}, {change_rate:+.2f}%")
-                                print(f"🔍 부호 일치 확인: 등락 {change:+.2f}, 등락률 {change_rate:+.2f}%")
-                                
-                                return {
-                                    'symbol': 'KOSPI',
-                                    'price': price,
-                                    'change': change,
-                                    'change_rate': change_rate,
-                                    'timestamp': datetime.now().isoformat()
-                                }
-                    
-                    # 기존 등락 정보 파싱 시도
-                    change_match = re.search(r'([+-]\d+\.\d+)', change_text)
-                    if change_match:
-                        change = float(change_match.group(1))
-                        print(f"🎯 KOSPI 등락 발견: {change:+,.2f}")
-                        
-                        # 등락률도 찾기
-                        rate_match = re.search(r'([+-]\d+\.\d+)%', change_text)
-                        if rate_match:
-                            change_rate = float(rate_match.group(1))
-                            print(f"🎯 KOSPI 등락률 발견: {change_rate:+.2f}%")
-                            
-                            return {
-                                'symbol': 'KOSPI',
-                                'price': price,
-                                'change': change,
-                                'change_rate': change_rate,
-                                'timestamp': datetime.now().isoformat()
-                            }
+                # 방법 3: KOSPI 전용 등락 정보 찾기 (KOSPI 200과 구분)
+                # KOSPI 가격 근처에서 정확한 등락 정보 찾기
+                print("🔍 KOSPI 전용 등락 정보 찾기 시작...")
                 
-                # 방법 4: 더 넓은 범위에서 등락 정보 찾기
-                # KOSPI 관련 모든 요소에서 등락 정보 검색
+                # 방법 3-1: KOSPI 전용 컨테이너 찾기
+                kospi_container = soup.find('div', {'id': 'KOSPI'}) or soup.find('div', {'class': 'KOSPI'})
+                if kospi_container:
+                    kospi_text = kospi_container.get_text()
+                    print(f"🔍 KOSPI 컨테이너 발견: {kospi_text[:200]}...")
+                    
+                    # KOSPI 가격과 등락 정보를 함께 찾기
+                    kospi_pattern = r'3,2\d{2}\.\d+\s+([+-]\d+\.\d+)\s+([+-]\d+\.\d+)%'
+                    kospi_match = re.search(kospi_pattern, kospi_text)
+                    
+                    if kospi_match:
+                        change = float(kospi_match.group(1))
+                        change_rate = float(kospi_match.group(2))
+                        print(f"🎯 KOSPI 등락 정보 발견 (컨테이너): {change:+,.2f}, {change_rate:+.2f}%")
+                        
+                        return {
+                            'symbol': 'KOSPI',
+                            'price': price,
+                            'change': change,
+                            'change_rate': change_rate,
+                            'timestamp': datetime.now().isoformat()
+                        }
+                
+                # 방법 3-2: KOSPI 가격 요소의 부모에서 등락 정보 찾기
+                kospi_price_parent = kospi_price_elem.parent
+                if kospi_price_parent:
+                    parent_text = kospi_price_parent.get_text()
+                    print(f"🔍 KOSPI 가격 부모 텍스트: {parent_text[:200]}...")
+                    
+                    # KOSPI 가격 근처의 등락 정보 패턴 (더 유연하게)
+                    # 패턴 1: 가격 + 공백 + 등락 + 공백 + 등락률%
+                    nearby_pattern1 = r'3,2\d{2}\.\d+\s+([+-]?\d+\.\d+)\s+([+-]\d+\.\d+)%'
+                    nearby_match1 = re.search(nearby_pattern1, parent_text)
+                    
+                    if nearby_match1:
+                        change = float(nearby_match1.group(1))
+                        change_rate = float(nearby_match1.group(2))
+                        print(f"🎯 KOSPI 등락 정보 발견 (패턴1): {change:+,.2f}, {change_rate:+.2f}%")
+                        
+                        return {
+                            'symbol': 'KOSPI',
+                            'price': price,
+                            'change': change,
+                            'change_rate': change_rate,
+                            'timestamp': datetime.now().isoformat()
+                        }
+                    
+                    # 패턴 2: 등락 + 공백 + 등락률% (부호가 없는 경우)
+                    nearby_pattern2 = r'(\d+\.\d+)\s+([+-]\d+\.\d+)%'
+                    nearby_match2 = re.search(nearby_pattern2, parent_text)
+                    
+                    if nearby_match2:
+                        change_str = nearby_match2.group(1)
+                        change_rate = float(nearby_match2.group(2))
+                        
+                        # 등락 값의 부호를 등락률과 일치시키기
+                        if change_rate > 0:
+                            change = float(change_str)  # 양수
+                        else:
+                            change = -float(change_str)  # 음수
+                        
+                        print(f"🎯 KOSPI 등락 정보 발견 (패턴2): {change:+,.2f}, {change_rate:+.2f}%")
+                        
+                        return {
+                            'symbol': 'KOSPI',
+                            'price': price,
+                            'change': change,
+                            'change_rate': change_rate,
+                            'timestamp': datetime.now().isoformat()
+                        }
+                
+                # 방법 3-3: KOSPI 관련 모든 요소에서 정확한 데이터 찾기
+                print("🔍 KOSPI 관련 요소에서 정확한 데이터 찾기...")
                 kospi_elements = soup.find_all(text=re.compile(r'코스피'))
+                
                 for element in kospi_elements:
                     parent = element.parent
                     if parent:
                         parent_text = parent.get_text()
-                        if '코스피' in parent_text and any(char.isdigit() for char in parent_text):
-                            print(f"🔍 KOSPI 관련 텍스트: {parent_text[:100]}...")
+                        
+                        # KOSPI 200이 아닌 KOSPI만 찾기
+                        if '코스피' in parent_text and '코스피200' not in parent_text and any(char.isdigit() for char in parent_text):
+                            print(f"🔍 KOSPI 관련 텍스트 (코스피200 제외): {parent_text[:100]}...")
                             
-                            # 등락 정보 패턴 찾기
-                            change_pattern = r'([+-]\d+\.\d+)\s+([+-]\d+\.\d+)%'
-                            change_match = re.search(change_pattern, parent_text)
+                            # KOSPI 가격과 등락 정보 패턴 찾기
+                            kospi_exact_pattern = r'3,2\d{2}\.\d+\s+([+-]\d+\.\d+)\s+([+-]\d+\.\d+)%'
+                            kospi_exact_match = re.search(kospi_exact_pattern, parent_text)
                             
-                            if change_match:
-                                change = float(change_match.group(1))
-                                change_rate = float(change_match.group(2))
-                                print(f"🎯 KOSPI 등락 정보 발견 (관련 텍스트): {change:+,.2f}, {change_rate:+.2f}%")
+                            if kospi_exact_match:
+                                change = float(kospi_exact_match.group(1))
+                                change_rate = float(kospi_exact_match.group(2))
+                                print(f"🎯 KOSPI 정확한 등락 정보 발견: {change:+,.2f}, {change_rate:+.2f}%")
                                 
                                 return {
                                     'symbol': 'KOSPI',
@@ -437,8 +438,29 @@ class NaverFinanceScraper:
                                     'timestamp': datetime.now().isoformat()
                                 }
                 
-                # 등락 정보를 찾지 못한 경우 가격만 반환
-                print(f"⚠️ KOSPI 등락 정보 없음, 가격만 반환")
+                # 방법 3-4: 전체 HTML에서 KOSPI 가격 근처의 등락 정보 찾기
+                print("🔍 전체 HTML에서 KOSPI 가격 근처 등락 정보 찾기...")
+                html_text = soup.get_text()
+                
+                # KOSPI 가격 다음에 오는 등락 정보를 더 유연하게 찾기
+                # 패턴: 가격 + 공백 + 등락 + 공백 + 등락률%
+                flexible_pattern = r'3,2\d{2}\.\d+\s+([+-]\d+\.\d+)\s+([+-]\d+\.\d+)%'
+                flexible_match = re.search(flexible_pattern, html_text)
+                
+                if flexible_match:
+                    change = float(flexible_match.group(1))
+                    change_rate = float(flexible_match.group(2))
+                    print(f"🎯 KOSPI 등락 정보 발견 (유연한 패턴): {change:+,.2f}, {change_rate:+.2f}%")
+                    
+                    return {
+                        'symbol': 'KOSPI',
+                        'price': price,
+                        'change': change,
+                        'change_rate': change_rate,
+                        'timestamp': datetime.now().isoformat()
+                    }
+                
+                print("⚠️ KOSPI 등락 정보를 찾을 수 없음")
                 return {
                     'symbol': 'KOSPI',
                     'price': price,
