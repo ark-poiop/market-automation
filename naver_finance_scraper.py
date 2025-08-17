@@ -704,7 +704,7 @@ class NaverFinanceScraper:
                     except:
                         continue
             
-            print(f"🚀 특징주 {len(movers)}개 수집: {[f'{m['name']}({m['change_rate']:+.1f}%)' for m in movers]}")
+            print(f"🚀 특징주 {len(movers)}개 수집: {len(movers)}개")
             
             return movers
             
