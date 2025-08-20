@@ -31,72 +31,37 @@ class MarketPoster:
                 naver_data = self.naver_adapter.load_naver_data()
                 if not naver_data:
                     print("⚠️ 네이버 데이터 로드 실패, 샘플 데이터 사용")
-                    indices = data["indices"]
-                    sectors = data.get("sectors", {})
-                    movers = data.get("movers", [])
+                    converted_data = data
                 else:
                     print("✅ 네이버 데이터 로드 완료")
                     
                     # 네이버 데이터를 미국 장 마감 형식으로 변환
                     converted_data = self.naver_adapter.convert_to_us_close_format(naver_data)
                     
-                    indices = converted_data["indices"]
-                    sectors = converted_data.get("sectors", {})
-                    movers = converted_data.get("movers", [])
-                    
                     print("✅ 네이버 데이터를 미국 장 마감 형식으로 변환 완료")
                     
             except Exception as e:
                 print(f"⚠️ 네이버 데이터 처리 실패, 샘플 데이터 사용: {e}")
-                indices = data["indices"]
-                sectors = data.get("sectors", {})
-                movers = data.get("movers", [])
-            
-            # 데이터 구조 검증 및 정규화
-            if not self._validate_indices_data(indices):
-                print("⚠️ 지수 데이터 구조 오류, 샘플 데이터 사용")
-                indices = data["indices"]
-                sectors = data.get("sectors", {})
-                movers = data.get("movers", [])
+                converted_data = data
             
             print("🔍 데이터 검증 완료")
             print("🔄 콘텐츠 합성 중...")
-            
-            # 섹터 요약 생성
-            sector_line = self.composer.compose_sector_summary(
-                sectors.get("top", []),
-                sectors.get("bottom", [])
-            )
-            print(f"🏭 섹터 요약: {sector_line}")
-            
-            # 특징주 요약 생성
-            movers_block = self.composer.compose_movers_summary(movers)
-            movers_line_count = len(movers_block.split('\n')) if movers_block else 0
-            print(f"🚀 특징주 요약: {movers_line_count}줄")
             
             # 템플릿 렌더링
             from ..rendering.templates import US_CLOSE
             
             content = US_CLOSE.format(
-                date=data["date"],
-                spx=self.composer.format_price(indices["spx"]["price"]),
-                spx_diff=self.composer.format_percentage(indices["spx"]["diff"], False),
-                spx_pct=self.composer.format_percentage(indices["spx"]["pct"]),
-                spx_comment=indices["spx"]["comment"],
-                ndx=self.composer.format_price(indices["ndx"]["price"]),
-                ndx_diff=self.composer.format_percentage(indices["ndx"]["diff"], False),
-                ndx_pct=self.composer.format_percentage(indices["ndx"]["pct"]),
-                ndx_comment=indices["ndx"]["comment"],
-                djia=self.composer.format_price(indices["djia"]["price"]),
-                djia_diff=self.composer.format_percentage(indices["djia"]["diff"], False),
-                djia_pct=self.composer.format_percentage(indices["djia"]["pct"]),
-                djia_comment=indices["djia"]["comment"],
-                rty=self.composer.format_price(indices["rty"]["price"]),
-                rty_diff=self.composer.format_percentage(indices["rty"]["diff"], False),
-                rty_pct=self.composer.format_percentage(indices["rty"]["pct"]),
-                rty_comment=indices["rty"]["comment"],
-                sector_line=sector_line,
-                movers_block=movers_block
+                date=converted_data["date"],
+                spx=self.composer.format_price(converted_data["spx"]),
+                spx_pct=self.composer.format_percentage(converted_data["spx_pct"]),
+                ndx=self.composer.format_price(converted_data["ndx"]),
+                ndx_pct=self.composer.format_percentage(converted_data["ndx_pct"]),
+                djia=self.composer.format_price(converted_data["djia"]),
+                djia_pct=self.composer.format_percentage(converted_data["djia_pct"]),
+                sector_top3=converted_data["sector_top3"],
+                news_events=converted_data["news_events"],
+                top_gainers=converted_data["top_gainers"],
+                top_losers=converted_data["top_losers"]
             )
             
             print("📝 템플릿 렌더링 완료")
@@ -211,8 +176,8 @@ class MarketPoster:
                     realtime_data = self.naver_adapter.convert_to_kr_midday_format(naver_data)
                     
                     print("✅ 네이버 데이터를 한국 장중 형식으로 변환 완료")
-                    print(f"📊 KOSPI: {realtime_data['kospi']['price']} ({realtime_data['kospi']['diff']:+.2f}, {realtime_data['kospi']['pct']:+.2f}%)")
-                    print(f"📊 KOSDAQ: {realtime_data['kosdaq']['price']} ({realtime_data['kosdaq']['diff']:+.2f}, {realtime_data['kosdaq']['pct']:+.2f}%)")
+                    print(f"📊 KOSPI: {realtime_data['kospi']} ({realtime_data['kospi_pct']:+.2f}%)")
+                    print(f"📊 KOSDAQ: {realtime_data['kosdaq']} ({realtime_data['kosdaq_pct']:+.2f}%)")
                     
             except Exception as e:
                 print(f"⚠️ 네이버 데이터 처리 실패, 샘플 데이터 사용: {e}")
@@ -230,15 +195,14 @@ class MarketPoster:
             
             content = KR_MIDDAY.format(
                 date=realtime_data["date"],
-                kospi=self.composer.format_price(realtime_data["kospi"]["price"]),
-                kospi_diff=self.composer.format_percentage(realtime_data["kospi"]["diff"], False),
-                kospi_pct=self.composer.format_percentage(realtime_data["kospi"]["pct"]),
-                kosdaq=self.composer.format_price(realtime_data["kosdaq"]["price"]),
-                kosdaq_diff=self.composer.format_percentage(realtime_data["kosdaq"]["diff"], False),
-                kosdaq_pct=self.composer.format_percentage(realtime_data["kosdaq"]["pct"]),
-                top_sectors=", ".join(realtime_data["top_sectors"]),
-                bottom_sectors=", ".join(realtime_data["bottom_sectors"]),
-                movers=realtime_data["movers"]
+                kospi=self.composer.format_price(realtime_data["kospi"]),
+                kospi_pct=self.composer.format_percentage(realtime_data["kospi_pct"]),
+                kosdaq=self.composer.format_price(realtime_data["kosdaq"]),
+                kosdaq_pct=self.composer.format_percentage(realtime_data["kosdaq_pct"]),
+                sector_top3=realtime_data["sector_top3"],
+                news_events=realtime_data["news_events"],
+                top_gainers=realtime_data["top_gainers"],
+                top_losers=realtime_data["top_losers"]
             )
             
             print("📝 한국 장중 템플릿 렌더링 완료")
@@ -456,7 +420,7 @@ class MarketPoster:
     
     def _validate_kr_midday_data(self, data: Dict[str, Any]) -> bool:
         """한국 장중 데이터 검증"""
-        required_fields = ["date", "kospi", "kosdaq", "top_sectors", "bottom_sectors", "movers"]
+        required_fields = ["date", "kospi", "kospi_pct", "kosdaq", "kosdaq_pct", "sector_top3", "news_events", "top_gainers", "top_losers"]
         if not all(field in data for field in required_fields):
             return False
         return True

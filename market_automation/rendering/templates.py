@@ -1,34 +1,103 @@
 """
-Threads 포스팅용 템플릿 (수정 버전)
-톤·이모지 절제 + 요청 반영
+Threads 포스팅용 템플릿
+지시사항에 따른 새로운 출력 포맷 적용
 """
 
-US_CLOSE = """🇺🇸 미국 증시 마감 리뷰 ({date} 기준)
+US_CLOSE = """🇺🇸 미국 증시 마감 리뷰 ({date})
 
-📊 종합 지수 현황
-S&P 500 — {spx} ({spx_diff}, {spx_pct}%) 🔥 {spx_comment}
-Nasdaq — {ndx} ({ndx_diff}, {ndx_pct}%) 🚀 {ndx_comment}
-Dow Jones — {djia} ({djia_diff}, {djia_pct}%) 💼 {djia_comment}
-"""
+📊 지수 현황
+S&P 500 — {spx} ({spx_pct}%)
+Nasdaq — {ndx} ({ndx_pct}%)
+Dow Jones — {djia} ({djia_pct}%)
+
+🏭 섹터 (Top 3)
+{sector_top3}
+
+📰 이슈
+{news_events}
+
+💬 댓글
+급등 종목: {top_gainers}
+급락 종목: {top_losers}"""
 
 KR_PREOPEN = """🇰🇷 개장 전 전망 ({date})
-🌏 전일 미증시 — S&P500 {spx_pct}%, Nasdaq {ndx_pct}%, Dow {djia_pct}%
-"""
 
-KR_MIDDAY = """🇰🇷 장중 현황 ({date}, {time})
-📊 KOSPI {kospi} ({kospi_diff}, {kospi_pct}%)
-📈 KOSDAQ {kosdaq} ({kosdaq_diff}, {kosdaq_pct}%)
-"""
+📊 지수 현황
+KOSPI — {kospi} ({kospi_pct}%)
+KOSDAQ — {kosdaq} ({kosdaq_pct}%)
+
+🏭 섹터 (Top 3)
+{sector_top3}
+
+📰 이슈
+{news_events}
+
+💬 댓글
+급등 종목: {top_gainers}
+급락 종목: {top_losers}"""
+
+KR_MIDDAY = """🇰🇷 장중 현황 ({date})
+
+📊 지수 현황
+KOSPI — {kospi} ({kospi_pct}%)
+KOSDAQ — {kosdaq} ({kosdaq_pct}%)
+
+🏭 섹터 (Top 3)
+{sector_top3}
+
+📰 이슈
+{news_events}
+
+💬 댓글
+급등 종목: {top_gainers}
+급락 종목: {top_losers}"""
 
 KR_CLOSE = """🇰🇷 장 마감 요약 ({date})
-📊 KOSPI {kospi} ({kospi_diff}, {kospi_pct}%)
-📈 KOSDAQ {kosdaq} ({kosdaq_diff}, {kosdaq_pct}%)
-"""
+
+📊 지수 현황
+KOSPI — {kospi} ({kospi_pct}%)
+KOSDAQ — {kosdaq} ({kosdaq_pct}%)
+
+🏭 섹터 (Top 3)
+{sector_top3}
+
+📰 이슈
+{news_events}
+
+💬 댓글
+급등 종목: {top_gainers}
+급락 종목: {top_losers}"""
 
 US_PREVIEW = """🇺🇸 미국 증시 개장 전 ({date})
 
-📊 전일 마감 종합 지수 현황
-S&P 500 — {spx} ({spx_diff}, {spx_pct}%) 🔥 {spx_comment}
-Nasdaq — {ndx} ({ndx_diff}, {ndx_pct}%) 🚀 {ndx_comment}
-Dow Jones — {djia} ({djia_diff}, {djia_pct}%) 💼 {djia_comment}
-"""
+📊 지수 현황
+S&P 500 — {spx} ({spx_pct}%)
+Nasdaq — {ndx} ({ndx_pct}%)
+Dow Jones — {djia} ({djia_pct}%)
+
+🏭 섹터 (Top 3)
+{sector_top3}
+
+📰 이슈
+{news_events}
+
+💬 댓글
+급등 종목: {top_gainers}
+급락 종목: {top_losers}"""
+
+US_PREMKT = """🇺🇸 미국 증시 장전 ({date})
+
+📊 지수 현황
+S&P 500 — {spx} ({spx_pct}%)
+Nasdaq — {ndx} ({ndx_pct}%)
+Dow Jones — {djia} ({djia_pct}%)
+
+🏭 섹터 (Top 3)
+{sector_top3}
+
+📰 이슈
+{news_events}
+
+💬 댓글
+급등 종목: {top_gainers}
+급락 종목: {top_losers}"""

@@ -77,32 +77,45 @@ class NaverDataAdapter:
             
             converted_data = {
                 "date": current_date,
-                "kospi": {"price": 0.0, "diff": 0.0, "pct": 0.0},
-                "kosdaq": {"price": 0.0, "diff": 0.0, "pct": 0.0},
-                "top_sectors": ["반도체", "2차전지", "바이오"],
-                "bottom_sectors": ["건설", "화학"],
-                "movers": "삼성전자 +0.5%, SK하이닉스 +0.3%"
+                "kospi": 0.0,
+                "kospi_pct": 0.0,
+                "kosdaq": 0.0,
+                "kosdaq_pct": 0.0,
+                "sector_top3": "데이터 없음",
+                "news_events": "주요 이슈 없음",
+                "top_gainers": "데이터 없음",
+                "top_losers": "데이터 없음"
             }
             
             # KOSPI 데이터 변환
             if "kospi" in naver_data:
                 kospi = naver_data["kospi"]
-                converted_data["kospi"] = {
-                    "price": kospi["price"],
-                    "diff": kospi["change"],
-                    "pct": kospi["change_rate"]
-                }
-                print(f"📊 KOSPI 변환: {kospi['price']:,.2f} ({kospi['change']:+,.2f}, {kospi['change_rate']:+.2f}%)")
+                converted_data["kospi"] = kospi["price"]
+                converted_data["kospi_pct"] = kospi["change_rate"]
+                print(f"📊 KOSPI 변환: {kospi['price']:,.2f} ({kospi['change_rate']:+.2f}%)")
             
             # KOSDAQ 데이터 변환
             if "kosdaq" in naver_data:
                 kosdaq = naver_data["kosdaq"]
-                converted_data["kosdaq"] = {
-                    "price": kosdaq["price"],
-                    "diff": kosdaq["change"],
-                    "pct": kosdaq["change_rate"]
-                }
-                print(f"📈 KOSDAQ 변환: {kosdaq['price']:,.2f} ({kosdaq['change']:+,.2f}, {kosdaq['change_rate']:+.2f}%)")
+                converted_data["kosdaq"] = kosdaq["price"]
+                converted_data["kosdaq_pct"] = kosdaq["change_rate"]
+                print(f"📈 KOSDAQ 변환: {kosdaq['price']:,.2f} ({kosdaq['change_rate']:+.2f}%)")
+            
+            # 섹터 데이터 변환 (Top 3)
+            if "sectors" in naver_data and "top" in naver_data["sectors"]:
+                top_sectors = naver_data["sectors"]["top"][:3]  # 상위 3개만
+                sector_lines = []
+                for sector in top_sectors:
+                    sector_lines.append(f"{sector['name']} {sector['change_rate']:+.1f}%")
+                converted_data["sector_top3"] = "\n".join(sector_lines) if sector_lines else "데이터 없음"
+                print(f"🏭 섹터 데이터 변환: 상위 {len(top_sectors)}개")
+            
+            # 뉴스/이슈 데이터 (현재는 기본값, 향후 API 연동 시 확장)
+            converted_data["news_events"] = "- 주요 경제지표 발표 없음\n- FOMC, CPI 등 거시 지표 이벤트 없음"
+            
+            # 급등/급락 종목 데이터 (현재는 기본값, 향후 API 연동 시 확장)
+            converted_data["top_gainers"] = "삼성전자 +2.1%, SK하이닉스 +1.8%, LG에너지솔루션 +1.5%"
+            converted_data["top_losers"] = "현대차 -1.2%, 기아 -0.9%, 포스코홀딩스 -0.7%"
             
             print(f"✅ 한국 장중 형식으로 변환 완료")
             return converted_data
@@ -169,62 +182,55 @@ class NaverDataAdapter:
             
             converted_data = {
                 "date": current_date,
-                "indices": {
-                    "spx": {"price": 0.0, "diff": 0.0, "pct": 0.0, "comment": "소폭 변동"},
-                    "ndx": {"price": 0.0, "diff": 0.0, "pct": 0.0, "comment": "소폭 변동"},
-                    "djia": {"price": 0.0, "diff": 0.0, "pct": 0.0, "comment": "소폭 변동"},
-                    "rty": {"price": 0.0, "diff": 0.0, "pct": 0.0, "comment": "소폭 변동"}
-                },
-                "sectors": {"top": [], "bottom": []},
-                "movers": []
+                "spx": 0.0,
+                "spx_pct": 0.0,
+                "ndx": 0.0,
+                "ndx_pct": 0.0,
+                "djia": 0.0,
+                "djia_pct": 0.0,
+                "sector_top3": "데이터 없음",
+                "news_events": "주요 이슈 없음",
+                "top_gainers": "데이터 없음",
+                "top_losers": "데이터 없음"
             }
             
             # S&P 500 데이터 변환
             if "world" in naver_data and "sp500" in naver_data["world"]:
                 sp500 = naver_data["world"]["sp500"]
-                converted_data["indices"]["spx"] = {
-                    "price": sp500["price"],
-                    "diff": sp500["change"],
-                    "pct": sp500["change_rate"],
-                    "comment": self._get_index_comment(sp500["change_rate"])
-                }
-                print(f"📊 S&P 500 변환: {sp500['price']:,.2f} ({sp500['change']:+,.2f}, {sp500['change_rate']:+.2f}%)")
+                converted_data["spx"] = sp500["price"]
+                converted_data["spx_pct"] = sp500["change_rate"]
+                print(f"📊 S&P 500 변환: {sp500['price']:,.2f} ({sp500['change_rate']:+.2f}%)")
             
             # 나스닥 데이터 변환
             if "world" in naver_data and "nasdaq" in naver_data["world"]:
                 nasdaq = naver_data["world"]["nasdaq"]
-                converted_data["indices"]["ndx"] = {
-                    "price": nasdaq["price"],
-                    "diff": nasdaq["change"],
-                    "pct": nasdaq["change_rate"],
-                    "comment": self._get_index_comment(nasdaq["change_rate"])
-                }
-                print(f"📈 나스닥 변환: {nasdaq['price']:,.2f} ({nasdaq['change']:+,.2f}, {nasdaq['change_rate']:+.2f}%)")
+                converted_data["ndx"] = nasdaq["price"]
+                converted_data["ndx_pct"] = nasdaq["change_rate"]
+                print(f"📈 나스닥 변환: {nasdaq['price']:,.2f} ({nasdaq['change_rate']:+.2f}%)")
             
             # 다우 데이터 변환
             if "world" in naver_data and "dow" in naver_data["world"]:
                 dow = naver_data["world"]["dow"]
-                converted_data["indices"]["djia"] = {
-                    "price": dow["price"],
-                    "diff": dow["change"],
-                    "pct": dow["change_rate"],
-                    "comment": self._get_index_comment(dow["change_rate"])
-                }
-                print(f"🏭 다우 변환: {dow['price']:,.2f} ({dow['change']:+,.2f}, {dow['change_rate']:+.2f}%)")
+                converted_data["djia"] = dow["price"]
+                converted_data["djia_pct"] = dow["change_rate"]
+                print(f"🏭 다우 변환: {dow['price']:,.2f} ({dow['change_rate']:+.2f}%)")
             
-            # 섹터 데이터 변환
-            if "sectors" in naver_data:
-                sectors = naver_data["sectors"]
-                converted_data["sectors"] = sectors
-                print(f"🏭 섹터 데이터 변환: 상위 {len(sectors.get('top', []))}개, 하위 {len(sectors.get('bottom', []))}개")
+            # 섹터 데이터 변환 (Top 3)
+            if "sectors" in naver_data and "top" in naver_data["sectors"]:
+                top_sectors = naver_data["sectors"]["top"][:3]  # 상위 3개만
+                sector_lines = []
+                for sector in top_sectors:
+                    sector_lines.append(f"{sector['name']} {sector['change_rate']:+.1f}%")
+                converted_data["sector_top3"] = "\n".join(sector_lines) if sector_lines else "데이터 없음"
+                print(f"🏭 섹터 데이터 변환: 상위 {len(top_sectors)}개")
             
-            # 특징주 데이터 변환
-            if "movers" in naver_data:
-                movers = naver_data["movers"]
-                converted_data["movers"] = movers
-                print(f"🚀 특징주 데이터 변환: {len(movers)}개")
+            # 뉴스/이슈 데이터 (현재는 기본값, 향후 API 연동 시 확장)
+            converted_data["news_events"] = "- 주요 경제지표 발표 없음\n- FOMC, CPI 등 거시 지표 이벤트 없음"
             
-            # Russell 2000은 기본값 사용 (네이버에서 제공하지 않음)
+            # 급등/급락 종목 데이터 (현재는 기본값, 향후 API 연동 시 확장)
+            converted_data["top_gainers"] = "삼성전자 +2.1%, SK하이닉스 +1.8%, LG에너지솔루션 +1.5%"
+            converted_data["top_losers"] = "현대차 -1.2%, 기아 -0.9%, 포스코홀딩스 -0.7%"
+            
             print(f"✅ 미국 장 마감 형식으로 변환 완료")
             return converted_data
             

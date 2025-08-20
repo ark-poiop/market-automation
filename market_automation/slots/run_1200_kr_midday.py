@@ -41,10 +41,12 @@ def main():
             
             print("📊 한국 장중 데이터 준비 완료")
             print(f"📅 날짜: {sample_data['date']}")
-            print(f"📈 KOSPI: {sample_data['kospi']['price']} ({sample_data['kospi']['diff']:+}, {sample_data['kospi']['pct']:+.2f}%)")
-            print(f"📈 KOSDAQ: {sample_data['kosdaq']['price']} ({sample_data['kosdaq']['diff']:+}, {sample_data['kosdaq']['pct']:+.2f}%)")
-            print(f"🟢 상승 업종: {', '.join(sample_data['top_sectors'])}")
-            print(f"🔴 하락 업종: {', '.join(sample_data['bottom_sectors'])}")
+            print(f"📈 KOSPI: {sample_data['kospi']} ({sample_data['kospi_pct']:+.2f}%)")
+            print(f"📈 KOSDAQ: {sample_data['kosdaq']} ({sample_data['kosdaq_pct']:+.2f}%)")
+            print(f"🏭 섹터 Top 3: {sample_data['sector_top3']}")
+            print(f"📰 이슈: {sample_data['news_events']}")
+            print(f"💬 급등: {sample_data['top_gainers']}")
+            print(f"💬 급락: {sample_data['top_losers']}")
             
             # 포스팅 실행
             print("\n🔄 한국 장중 포스팅 실행 중...")
