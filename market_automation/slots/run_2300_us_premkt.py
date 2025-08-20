@@ -15,6 +15,7 @@ sys.path.insert(0, str(project_root))
 
 from market_automation.posting.poster import MarketPoster
 from market_automation.config import config
+from market_automation.datasource.naver_adapter import NaverDataAdapter
 
 def main():
     """메인 실행 함수"""
@@ -25,41 +26,45 @@ def main():
         # 포스터 초기화
         poster = MarketPoster()
         
-        # 샘플 데이터 준비 (실제 운영 시에는 API에서 미국 장전 데이터 수집)
-        sample_data = {
-            "date": "2025-08-13",
-            "us_wrap": {"spx_pct": 1.13, "ndx_pct": 1.39, "djia_pct": 1.10},
-            "futures": {"es": 6452.0, "nq": 21720.5, "ym": 44450.0},
-            "macro": {"wti": 78.4, "gold": 1950.0, "ust10y": 3.95},
-            "today_events": ["美소비자물가지수 20:30", "Fed 의사록 02:00"],
-            "focus_sectors": ["기술", "금융", "헬스케어"],
-            "risks": ["인플레이션 우려", "Fed 정책 불확실성"]
-        }
+        # 네이버 데이터 어댑터 초기화
+        naver_adapter = NaverDataAdapter()
         
-        print("📊 미국 장전 데이터 준비 완료")
-        print(f"📅 날짜: {sample_data['date']}")
-        print(f"🌏 전일 미증시 — S&P500 {sample_data['us_wrap']['spx_pct']:+.2f}%, Nasdaq {sample_data['us_wrap']['ndx_pct']:+.2f}%, Dow {sample_data['us_wrap']['djia_pct']:+.2f}%")
-        print(f"📉 선물 — ES {sample_data['futures']['es']}, NQ {sample_data['futures']['nq']}, YM {sample_data['futures']['ym']}")
-        print(f"💱 원자재 — WTI ${sample_data['macro']['wti']}, Gold ${sample_data['macro']['gold']}, 10Y {sample_data['macro']['ust10y']}bp")
-        print(f"🗓️ 일정 — {', '.join(sample_data['today_events'])}")
-        print(f"📈 포커스 — {', '.join(sample_data['focus_sectors'])}")
-        print(f"⚠️ 리스크 — {', '.join(sample_data['risks'])}")
+        # 네이버 데이터 로드 및 변환
+        naver_data = naver_adapter.load_naver_data()
         
-        # 포스팅 실행
-        print("\n🔄 미국 장전 포스팅 실행 중...")
-        result = poster.post_us_premkt(sample_data)
-        
-        if result["success"]:
-            print("✅ 미국 장전 포스팅 성공")
-            if result.get("dry_run"):
-                print("🔒 DRY RUN 모드로 실행됨")
+        if naver_data:
+            print("📊 네이버 데이터 로드 완료")
+            
+            # 미국 장전 형식으로 변환
+            sample_data = naver_adapter.convert_to_us_premkt_format(naver_data)
+            print("🔄 데이터 형식 변환 완료")
+            
+            print("📊 미국 장전 데이터 준비 완료")
+            print(f"📅 날짜: {sample_data['date']}")
+            print(f"📊 S&P 500: {sample_data['spx']} ({sample_data['spx_pct']:+.2f}%)")
+            print(f"📈 Nasdaq: {sample_data['ndx']} ({sample_data['ndx_pct']:+.2f}%)")
+            print(f"🏭 Dow Jones: {sample_data['djia']} ({sample_data['djia_pct']:+.2f}%)")
+            print(f"🏭 섹터 Top 3: {sample_data['sector_top3']}")
+            print(f"📰 이슈: {sample_data['news_events']}")
+            print(f"💬 급등: {sample_data['top_gainers']}")
+            print(f"💬 급락: {sample_data['top_losers']}")
+            
+            # 포스팅은 하지 않고 로컬에서만 결과물 확인
+            print("\n🔄 미국 장전 포스트 생성 중...")
+            result = poster.post_us_premkt(sample_data)
+            
+            if result["success"]:
+                print("✅ 미국 장전 포스트 생성 성공")
                 print("\n" + "="*60)
                 print("📝 생성된 포스트 내용:")
                 print("="*60)
                 print(result.get("content", "콘텐츠 없음"))
                 print("="*60)
+                print("🔒 실제 포스팅은 건너뜀 (로컬 테스트 모드)")
+            else:
+                print(f"❌ 미국 장전 포스트 생성 실패: {result.get('error', 'Unknown error')}")
         else:
-            print(f"❌ 미국 장전 포스팅 실패: {result.get('error', 'Unknown error')}")
+            print("❌ 네이버 데이터 로드 실패")
             
     except Exception as e:
         print(f"💥 예상치 못한 오류: {e}")

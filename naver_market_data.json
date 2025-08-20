@@ -1,66 +1,66 @@
 {
   "kospi": {
     "symbol": "KOSPI",
-    "price": 3184.17,
-    "change": -41.49,
-    "change_rate": -1.29,
-    "timestamp": "2025-08-18T12:34:06.008934"
+    "price": 3130.09,
+    "change": -21.47,
+    "change_rate": -0.68,
+    "timestamp": "2025-08-20T22:21:40.024954"
   },
   "kosdaq": {
     "symbol": "KOSDAQ",
-    "price": 800.05,
-    "change": -15.21,
-    "change_rate": -1.87,
-    "timestamp": "2025-08-18T12:34:06.013254"
+    "price": 777.61,
+    "change": -10.35,
+    "change_rate": -1.31,
+    "timestamp": "2025-08-20T22:21:40.028974"
   },
-  "timestamp": "2025-08-18T12:34:06.013268",
+  "timestamp": "2025-08-20T22:21:40.028987",
   "source": "naver_finance",
   "world": {
     "sp500": {
-      "price": 6449.8,
-      "change": -18.74,
-      "change_rate": -0.29,
-      "timestamp": "2025-08-18T12:34:06.092018"
+      "price": 6411.37,
+      "change": -37.78,
+      "change_rate": -0.59,
+      "timestamp": "2025-08-20T22:21:40.113937"
     },
     "nasdaq": {
-      "price": 21622.98,
-      "change": -87.69,
-      "change_rate": -0.4,
-      "timestamp": "2025-08-18T12:34:06.092142"
+      "price": 21314.95,
+      "change": -314.82,
+      "change_rate": -1.46,
+      "timestamp": "2025-08-20T22:21:40.114064"
     },
     "dow": {
-      "price": 44946.12,
-      "change": 34.86,
-      "change_rate": 0.08,
-      "timestamp": "2025-08-18T12:34:06.092236"
+      "price": 44922.27,
+      "change": 10.45,
+      "change_rate": 0.02,
+      "timestamp": "2025-08-20T22:21:40.114159"
     }
   },
   "sectors": {
     "top": [
       {
-        "name": "조선기자재",
-        "change_rate": 14.0
+        "name": "카지노",
+        "change_rate": 5.0
       },
       {
-        "name": "2025 하반기 신규상장",
-        "change_rate": 8.0
+        "name": "김밥(냉동김밥 등)",
+        "change_rate": 4.0
       },
       {
-        "name": "자전거",
-        "change_rate": 2.0
+        "name": "자동차 대표주",
+        "change_rate": 4.0
       }
     ],
     "bottom": [
       {
-        "name": "자전거",
-        "change_rate": 2.0
+        "name": "자동차 대표주",
+        "change_rate": 4.0
       },
       {
-        "name": "전기자전거",
-        "change_rate": 2.0
+        "name": "백화점",
+        "change_rate": 3.0
       },
       {
-        "name": "백신여권",
+        "name": "마켓컬리(kurly)",
         "change_rate": 2.0
       }
     ]

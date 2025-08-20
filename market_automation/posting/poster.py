@@ -371,7 +371,7 @@ class MarketPoster:
                     print("✅ 네이버 데이터 로드 완료")
                     
                     # 네이버 데이터를 미국 장전 형식으로 변환
-                    realtime_data = self.naver_adapter.convert_to_us_preview_format(naver_data)
+                    realtime_data = self.naver_adapter.convert_to_us_premkt_format(naver_data)
                     
                     print("✅ 네이버 데이터를 미국 장전 형식으로 변환 완료")
                     
@@ -380,7 +380,7 @@ class MarketPoster:
                 realtime_data = data
             
             # 데이터 검증
-            if not self._validate_us_preview_data(realtime_data):  # 동일한 데이터 구조 사용
+            if not self._validate_us_premkt_data(realtime_data):
                 return {"success": False, "error": "Invalid data"}
             
             print("🔍 미국 장전 데이터 검증 완료")
@@ -391,18 +391,16 @@ class MarketPoster:
             
             content = US_PREMKT.format(
                 date=realtime_data["date"],
-                spx_pct=self.composer.format_percentage(realtime_data["us_wrap"]["spx_pct"]),
-                ndx_pct=self.composer.format_percentage(realtime_data["us_wrap"]["ndx_pct"]),
-                djia_pct=self.composer.format_percentage(realtime_data["us_wrap"]["djia_pct"]),
-                es=self.composer.format_price(realtime_data["futures"]["es"]),
-                nq=self.composer.format_price(realtime_data["futures"]["nq"]),
-                ym=self.composer.format_price(realtime_data["futures"]["ym"]),
-                wti=self.composer.format_price(realtime_data["macro"]["wti"]),
-                gold=self.composer.format_price(realtime_data["macro"]["gold"]),
-                ust10y=self.composer.format_price(realtime_data["macro"]["ust10y"]),
-                today_events=" / ".join(realtime_data["today_events"]),
-                focus_sectors="·".join(realtime_data["focus_sectors"]),
-                risks=", ".join(realtime_data["risks"])
+                spx=self.composer.format_price(realtime_data["spx"]),
+                spx_pct=self.composer.format_percentage(realtime_data["spx_pct"]),
+                ndx=self.composer.format_price(realtime_data["ndx"]),
+                ndx_pct=self.composer.format_percentage(realtime_data["ndx_pct"]),
+                djia=self.composer.format_price(realtime_data["djia"]),
+                djia_pct=self.composer.format_percentage(realtime_data["djia_pct"]),
+                sector_top3=realtime_data["sector_top3"],
+                news_events=realtime_data["news_events"],
+                top_gainers=realtime_data["top_gainers"],
+                top_losers=realtime_data["top_losers"]
             )
             
             print("📝 미국 장전 템플릿 렌더링 완료")
@@ -428,6 +426,13 @@ class MarketPoster:
     def _validate_kr_close_data(self, data: Dict[str, Any]) -> bool:
         """한국 장 마감 데이터 검증"""
         required_fields = ["date", "kospi", "kosdaq"]
+        if not all(field in data for field in required_fields):
+            return False
+        return True
+    
+    def _validate_us_premkt_data(self, data: Dict[str, Any]) -> bool:
+        """미국 장전 데이터 검증"""
+        required_fields = ["date", "spx", "spx_pct", "ndx", "ndx_pct", "djia", "djia_pct", "sector_top3", "news_events", "top_gainers", "top_losers"]
         if not all(field in data for field in required_fields):
             return False
         return True
