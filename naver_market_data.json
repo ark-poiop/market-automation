@@ -1,67 +1,67 @@
 {
   "kospi": {
     "symbol": "KOSPI",
-    "price": 3223.78,
-    "change": -0.59,
-    "change_rate": -0.02,
-    "timestamp": "2025-08-14T14:49:00.424671"
+    "price": 3184.17,
+    "change": -41.49,
+    "change_rate": -1.29,
+    "timestamp": "2025-08-18T12:34:06.008934"
   },
   "kosdaq": {
     "symbol": "KOSDAQ",
-    "price": 815.2,
-    "change": 1.1,
-    "change_rate": 0.14,
-    "timestamp": "2025-08-14T14:49:00.428544"
+    "price": 800.05,
+    "change": -15.21,
+    "change_rate": -1.87,
+    "timestamp": "2025-08-18T12:34:06.013254"
   },
-  "timestamp": "2025-08-14T14:49:00.428560",
+  "timestamp": "2025-08-18T12:34:06.013268",
   "source": "naver_finance",
   "world": {
     "sp500": {
-      "price": 6466.58,
-      "change": 20.82,
-      "change_rate": 0.32,
-      "timestamp": "2025-08-14T14:49:00.587283"
+      "price": 6449.8,
+      "change": -18.74,
+      "change_rate": -0.29,
+      "timestamp": "2025-08-18T12:34:06.092018"
     },
     "nasdaq": {
-      "price": 21713.14,
-      "change": 31.24,
-      "change_rate": 0.14,
-      "timestamp": "2025-08-14T14:49:00.587434"
+      "price": 21622.98,
+      "change": -87.69,
+      "change_rate": -0.4,
+      "timestamp": "2025-08-18T12:34:06.092142"
     },
     "dow": {
-      "price": 44922.27,
-      "change": 463.66,
-      "change_rate": 1.04,
-      "timestamp": "2025-08-14T14:49:00.587561"
+      "price": 44946.12,
+      "change": 34.86,
+      "change_rate": 0.08,
+      "timestamp": "2025-08-18T12:34:06.092236"
     }
   },
   "sectors": {
     "top": [
       {
-        "name": "비만치료제",
-        "change_rate": 25.0
-      },
-      {
-        "name": "탈모 치료",
+        "name": "조선기자재",
         "change_rate": 14.0
       },
       {
-        "name": "웹툰",
-        "change_rate": 10.0
+        "name": "2025 하반기 신규상장",
+        "change_rate": 8.0
+      },
+      {
+        "name": "자전거",
+        "change_rate": 2.0
       }
     ],
     "bottom": [
       {
-        "name": "웹툰",
-        "change_rate": 10.0
+        "name": "자전거",
+        "change_rate": 2.0
       },
       {
-        "name": "제대혈",
-        "change_rate": 3.0
+        "name": "전기자전거",
+        "change_rate": 2.0
       },
       {
-        "name": "2025 하반기 신규상장",
-        "change_rate": 3.0
+        "name": "백신여권",
+        "change_rate": 2.0
       }
     ]
   }
