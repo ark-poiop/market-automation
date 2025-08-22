@@ -8,7 +8,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 setup(
     name="market-automation",
-    version="0.1.0",
+    version="2.0.0",
     author="Market Automation",
     author_email="",
     description="자동 증시 분석 및 Threads 포스팅 시스템",
