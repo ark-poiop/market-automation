@@ -64,5 +64,44 @@ secrets.json
 config.json
 credentials.json
 
+# Market data files (실시간 데이터, 민감한 정보 포함)
+naver_market_data.json
+*.json.bak
+temp_*.json
+naver_theme_data_*.json
+
+# Backup and temporary files
+*_backup.py
+*_backup.py.bak
+temp_*.py
+temp_line.txt
+
+# Cron and deployment scripts (로컬 환경 설정)
+check_cron.sh
+setup_cron.sh
+setup_cron.sh.bak
+
+# Docker and deployment (로컬 환경 설정)
+docker-compose.override.yml
+.dockerignore
+
+# Local configuration overrides
+config_local.py
+settings_local.py
+
+# Test and development files
+test_*.py
+debug_*.py
+*_test.py
+
 # Sample data (optional - remove if you want to include)
 # samples/
+
+# Keep important configuration examples
+!env.example
+!samples/
+!docker-compose.yml
+!Dockerfile
+!Makefile
+!setup.py
+!requirements.txt

@@ -145,3 +145,75 @@ class ContentComposer:
             return f"{value:,.1f}"
         else:
             return f"{value:.2f}"
+    
+    def translate_to_korean(self, english_text: str, context: str = "market") -> str:
+        """GPT를 이용한 한국어 번역 및 요약"""
+        if not english_text or english_text in ["데이터 없음", "- 추가 시장 뉴스 없음", "- 주요 경제지표 발표 없음"]:
+            return english_text
+        
+        try:
+            client = openai.OpenAI(api_key=self.config.get_openai_api_key())
+            
+            if context == "news":
+                system_content = "당신은 금융 뉴스 번역 전문가입니다. 영어 뉴스를 자연스러운 한국어로 번역하고 간결하게 요약하세요. 각 뉴스는 '- '로 시작하고, 50자 이내로 요약하세요."
+                user_content = f"다음 영어 뉴스들을 한국어로 번역하고 요약해주세요:\n\n{english_text}"
+            elif context == "sector":
+                system_content = "당신은 증시 섹터 분석 전문가입니다. 영어 섹터명을 한국어로 번역하고 간결하게 표현하세요."
+                user_content = f"다음 섹터 정보를 한국어로 번역해주세요:\n\n{english_text}"
+            else:  # market general
+                system_content = "당신은 증시 분석 전문가입니다. 영어 텍스트를 자연스러운 한국어로 번역하세요."
+                user_content = f"다음 텍스트를 한국어로 번역해주세요:\n\n{english_text}"
+            
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": system_content},
+                    {"role": "user", "content": user_content}
+                ],
+                max_tokens=200,
+                temperature=0.3
+            )
+            
+            korean_text = response.choices[0].message.content.strip()
+            print(f"✅ GPT 번역 성공: {english_text[:30]}... → {korean_text[:30]}...")
+            return korean_text
+            
+        except Exception as e:
+            print(f"⚠️ GPT 번역 실패, 원본 유지: {e}")
+            return english_text
+    
+    def compose_korean_summary(self, data: Dict[str, Any], slot_type: str = "general") -> Dict[str, str]:
+        """GPT를 이용한 한국어 데이터 요약"""
+        result = {}
+        
+        try:
+            # 뉴스/이슈 번역
+            if "main_news" in data:
+                result["main_news"] = self.translate_to_korean(data["main_news"], "news")
+            
+            if "additional_news" in data:
+                result["additional_news"] = self.translate_to_korean(data["additional_news"], "news")
+            
+            # 섹터는 이미 한국어이므로 그대로 유지
+            if "sector_top3" in data:
+                result["sector_top3"] = data["sector_top3"]
+            
+            # 급등/급락 종목은 이미 한국어이므로 그대로 유지
+            if "top_gainers" in data:
+                result["top_gainers"] = data["top_gainers"]
+            
+            if "top_losers" in data:
+                result["top_losers"] = data["top_losers"]
+            
+            print(f"✅ 한국어 요약 완료: {len(result)}개 필드")
+            return result
+            
+        except Exception as e:
+            print(f"⚠️ 한국어 요약 실패: {e}")
+            return {
+                "main_news": data.get("main_news", "- 주요 이슈 없음"),
+                "additional_news": data.get("additional_news", "- 추가 뉴스 없음"),
+                "sector_top3": data.get("sector_top3", "데이터 없음"),
+                "top_gainers": data.get("top_gainers", "데이터 없음"),
+                "top_losers": data.get("top_losers", "데이터 없음")
+            }
